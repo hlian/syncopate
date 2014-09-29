@@ -10,20 +10,34 @@ import UIKit
 
 class SongView : UIView {
     let song : Song
+    let titleLabel : UILabel
 
     required init(coder: NSCoder) {
         assertionFailure("no")
     }
 
-    required init(frame: CGRect, song: Song, playingSignal: RACSignal) {
+    required init(frame: CGRect, song: Song, playingSignal: RACSignal, metadataSignal: RACSignal) {
         self.song = song
-
+        self.titleLabel = UILabel(frame: CGRectMake(10, 10, frame.width - 10, 30))
         super.init(frame: frame)
+
+        self.titleLabel.text = "Loading..."
+        self.titleLabel.font = UIFont(name: "Avenir Next", size: 18)
+        metadataSignal.subscribeNext { [weak self] x in
+            let metadata = (x as [String: String]?)
+            if let title = metadata?["title"] {
+                self!.titleLabel.text = title
+            } else {
+                self!.titleLabel.text = "?"
+            }
+        }
 
         playingSignal.subscribeNext({ [weak self] x in
             let playing = (x as NSNumber).boolValue
-            self!.backgroundColor = playing ? UIColor.blueColor() : UIColor.whiteColor();
+            self!.backgroundColor = playing ? UIColor.redColor().colorWithAlphaComponent(0.5) : UIColor.whiteColor();
         });
+
+        self.addSubview(self.titleLabel)
     }
 }
 
@@ -32,7 +46,9 @@ class SongViewController: UIViewController {
     let player : AVPlayer
     let frame : CGRect
     let onTap : SongViewController -> Void
+
     dynamic var playing : Bool
+    dynamic var metadata : [String: String]?
 
     var songFrame : CGRect = CGRectMake(0, 0, 0, 0)
 
@@ -47,15 +63,18 @@ class SongViewController: UIViewController {
         self.onTap = onTap
 
         self.playing = false
+        self.metadata = nil
 
         super.init(nibName: nil, bundle: nil)
 
         self.rac_valuesForKeyPath("player.currentItem.asset.commonMetadata", observer: self).subscribeNext { [weak self] array in
+            var metadata : [String: String] = [:]
             for item in (array as [AVMetadataItem]) {
                 if (item.commonKey != "artwork" && item.commonKey != "identifier") {
-                    println(self!.hash, item.stringValue)
+                    metadata[item.commonKey] = item.stringValue
                 }
             }
+            self!.metadata = metadata
         }
     }
 
@@ -63,7 +82,9 @@ class SongViewController: UIViewController {
         self.view = SongView(
             frame: self.frame,
             song: self.song,
-            playingSignal: self.rac_valuesForKeyPath("playing", observer: self))
+            playingSignal: self.rac_valuesForKeyPath("playing", observer: self),
+            metadataSignal: self.rac_valuesForKeyPath("metadata", observer: self)
+        )
     }
 
     override func viewDidLoad() {
