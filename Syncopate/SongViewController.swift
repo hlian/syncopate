@@ -18,7 +18,7 @@ class SongView : UIView {
 
     required init(frame: CGRect, song: Song, playingSignal: RACSignal, metadataSignal: RACSignal) {
         self.song = song
-        self.titleLabel = UILabel(frame: CGRectMake(10, 10, frame.width - 10, 30))
+        self.titleLabel = UILabel(frame: CGRectMake(20, 20, frame.width - 20, 40))
         super.init(frame: frame)
 
         self.titleLabel.text = "Loading..."
@@ -34,8 +34,9 @@ class SongView : UIView {
 
         playingSignal.subscribeNext({ [weak self] x in
             let playing = (x as NSNumber).boolValue
-            self!.backgroundColor = playing ? UIColor.redColor().colorWithAlphaComponent(0.5) : UIColor.whiteColor();
+            self!.backgroundColor = playing ? UIColor(red: 1.0, green: 0.9, blue: 0.9, alpha: 0.992) : UIColor.whiteColor();
         });
+
 
         self.addSubview(self.titleLabel)
     }
@@ -91,7 +92,6 @@ class SongViewController: UIViewController {
         super.viewDidLoad()
 
         let tapGesture = UITapGestureRecognizer(target: self, action: "didTap")
-        self.view.backgroundColor = UIColor.whiteColor()
         self.view.addGestureRecognizer(tapGesture)
     }
 
