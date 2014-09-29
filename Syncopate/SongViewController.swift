@@ -31,20 +31,22 @@ class SongViewController: UIViewController {
     let song : Song
     let player : AVPlayer
     let frame : CGRect
+    let onTap : SongViewController -> Void
     dynamic var playing : Bool
 
-    var index : Int = 0
     var songFrame : CGRect = CGRectMake(0, 0, 0, 0)
 
     required init(coder aDecoder: NSCoder) {
         assertionFailure("no")
     }
 
-    required init(frame: CGRect, song: Song) {
+    required init(frame: CGRect, song: Song, onTap: SongViewController -> Void) {
         self.song = song
         self.player = AVPlayer.playerWithURL(self.song.url) as AVPlayer
-        self.playing = false
         self.frame = frame
+        self.onTap = onTap
+
+        self.playing = false
 
         super.init(nibName: nil, bundle: nil)
 
@@ -80,5 +82,6 @@ class SongViewController: UIViewController {
             self.player.pause()
             self.playing = false
         }
+        self.onTap(self)
     }
 }
