@@ -1,58 +1,100 @@
+import ObjectiveC
 import UIKit
 
-class SpringyAnimator : NSObject, UIViewControllerAnimatedTransitioning {
-    var reversed = false
-    var lastFrame : CGRect?
-    var lastSuperview : UIView?
+class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransitioning, UIViewControllerTransitioningDelegate {
+    let duration : NSTimeInterval = 0.5
+    let damping : CGFloat = 0.7
 
-    func transitionDuration(transitionContext: UIViewControllerContextTransitioning!) -> NSTimeInterval {
-        return 0.5
+    var maximizing = true
+    var originalFrame : CGRect?
+    var originalSuperview : UIView?
+
+    func transitionDuration(transitionContext: UIViewControllerContextTransitioning) -> NSTimeInterval {
+        return self.duration
     }
 
-    func animateTransition(transitionContext: UIViewControllerContextTransitioning!) {
-        let fromVC = transitionContext.viewControllerForKey(UITransitionContextFromViewControllerKey);
-        let fromVCFrame = transitionContext.initialFrameForViewController(fromVC);
-        let toVC = transitionContext.viewControllerForKey(UITransitionContextToViewControllerKey);
+    func animateTransition(ctx: UIViewControllerContextTransitioning) {
+        let songVC = self.songViewControllerOf(ctx)
+        let homeVC = self.homeViewControllerOf(ctx)
 
-        if (self.reversed) {
-            transitionContext.containerView().addSubview(fromVC.view)
-        } else {
-            self.lastSuperview = toVC.view.superview
-            self.lastFrame = self.lastSuperview!.convertRect(toVC.view.frame, toView: transitionContext.containerView())
-            toVC.view.frame = self.lastFrame!
-            transitionContext.containerView().addSubview(toVC.view);
-        }
+        if (self.maximizing) {
+            // The song view controller is weird! Its view is already in the hierarchy; it as a VC
+            // is already a child of the home VC.
+            self.originalFrame = songVC.view.frame
+            self.originalSuperview = songVC.view.superview
 
-        UIView.animateWithDuration(
-            self.transitionDuration(transitionContext),
-            delay: 0,
-            usingSpringWithDamping: 0.7,
-            initialSpringVelocity: 0.6,
-            options: UIViewAnimationOptions.CurveEaseInOut,
-            animations: { () -> Void in
-                if (self.reversed) {
-                    fromVC.view.frame = self.lastFrame!
-                } else {
-                    toVC.view.frame = fromVCFrame
+            ctx.containerView().insertSubview(songVC.view, aboveSubview: homeVC.view)
+            self.springlyAnimate({ () -> Void in
+                songVC.view.frame = homeVC.view.frame
+            }, completionBlock: { (finished) -> Void in
+                assert(!ctx.transitionWasCancelled())
+                if (!finished) {
+                    self.animateTransition(ctx)
+                    return
                 }
-            },
-            completion: { finished in
-                if (self.reversed) {
-                    fromVC.view.frame = transitionContext.containerView().convertRect(self.lastFrame!, toView: self.lastSuperview!)
-                }
-                transitionContext.completeTransition(true)
-                if (self.reversed) {
-                    self.lastSuperview!.addSubview(fromVC.view)
-                }
-                self.reversed = !self.reversed
+                ctx.completeTransition(true)
             })
+        } else {
+            ctx.containerView().insertSubview(homeVC.view, belowSubview: songVC.view)
+            self.springlyAnimate({ () -> Void in
+                songVC.view.frame = ctx.containerView().convertRect(self.originalFrame!, fromView: self.originalSuperview!)
+            }, completionBlock: { (finished) -> Void in
+                assert(!ctx.transitionWasCancelled())
+                if (!finished) {
+                    self.animateTransition(ctx)
+                    return
+                }
+
+                ctx.completeTransition(true)
+                songVC.view.frame = self.originalFrame!
+                self.originalSuperview!.addSubview(songVC.view)
+            })
+        }
+    }
+
+    func springlyAnimate(animationBlock: () -> Void, completionBlock: (Bool) -> Void) {
+        UIView.animateWithDuration(
+            self.duration,
+            delay: 0,
+            usingSpringWithDamping: self.damping,
+            initialSpringVelocity: 0,
+            options: UIViewAnimationOptions.CurveLinear | UIViewAnimationOptions.BeginFromCurrentState,
+            animations: animationBlock,
+            completion: completionBlock)
+    }
+
+    func animationControllerForPresentedController(
+            presented: UIViewController,
+            presentingController presenting: UIViewController,
+            sourceController source: UIViewController)-> UIViewControllerAnimatedTransitioning? {
+        self.maximizing = true
+        return self
+    }
+
+    func animationControllerForDismissedController(dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        self.maximizing = false
+        return self
+    }
+
+    private func songViewControllerOf(ctx: UIViewControllerContextTransitioning) -> UIViewController {
+        let key = (self.maximizing ? UITransitionContextToViewControllerKey : UITransitionContextFromViewControllerKey)
+        let vc = ctx.viewControllerForKey(key)!
+        return vc
+    }
+
+    private func homeViewControllerOf(ctx: UIViewControllerContextTransitioning) -> UIViewController {
+        let key = (!self.maximizing ? UITransitionContextToViewControllerKey : UITransitionContextFromViewControllerKey)
+        let vc = ctx.viewControllerForKey(key)!
+        return vc
     }
 }
 
-class HomeViewController: UIViewController, UIViewControllerTransitioningDelegate {
+class HomeViewController: UIViewController {
     let songHeight = 100
     let fauns = NSMutableOrderedSet()
-    var modalAnimator = SpringyAnimator()
+
+    var animationControllerKey: Void?
+    var preparedSongs = false
 
     dynamic var modalFaun : SongViewController?
 
@@ -63,7 +105,10 @@ class HomeViewController: UIViewController, UIViewControllerTransitioningDelegat
         songFaun.didMoveToParentViewController(self)
 
         songFaun.modalPresentationStyle = UIModalPresentationStyle.Custom
-        songFaun.transitioningDelegate = self
+
+        let ac = HomeToSongAnimationController()
+        songFaun.transitioningDelegate = ac
+        objc_setAssociatedObject(songFaun, &animationControllerKey, ac, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
     }
 
     override func loadView() {
@@ -80,6 +125,13 @@ class HomeViewController: UIViewController, UIViewControllerTransitioningDelegat
     }
 
     override func viewWillAppear(animated: Bool) {
+        if (!self.preparedSongs) {
+            self.prepareSongs()
+            self.preparedSongs = true
+        }
+    }
+
+    func prepareSongs() {
         let onTap = { (controller : SongViewController) -> Void in
             if (self.modalFaun == nil) {
                 self.modalFaun = controller
@@ -90,13 +142,13 @@ class HomeViewController: UIViewController, UIViewControllerTransitioningDelegat
 
         self.addFaun(SongViewController(
             frame: CGRectMake(10, CGFloat(10), self.view.bounds.size.width - 20, CGFloat(self.songHeight)),
-            song: Song(url: NSURL(string: "https://a.tumblr.com/tumblr_mndqjdrkkq1s1b8mno1_r1.mp3")),
+            song: Song(url: NSURL(string: "https://a.tumblr.com/tumblr_mndqjdrkkq1s1b8mno1_r1.mp3")!),
             onTap: onTap
         ))
 
         self.addFaun(SongViewController(
             frame: CGRectMake(10, CGFloat(self.songHeight + 20), self.view.bounds.size.width - 20, CGFloat(self.songHeight)),
-            song: Song(url: NSURL(string: "https://a.tumblr.com/tumblr_naqik7VOSl1te74f8o1.mp3")),
+            song: Song(url: NSURL(string: "https://a.tumblr.com/tumblr_naqik7VOSl1te74f8o1.mp3")!),
             onTap: onTap
         ))
     }
@@ -111,18 +163,6 @@ class HomeViewController: UIViewController, UIViewControllerTransitioningDelegat
                 self!.dismissViewControllerAnimated(true, completion: nil)
             }
         }
-    }
-
-    func animationControllerForPresentedController(
-        presented: UIViewController!,
-        presentingController presenting: UIViewController!,
-        sourceController source: UIViewController!) -> UIViewControllerAnimatedTransitioning! {
-            return self.modalAnimator
-    }
-
-    func animationControllerForDismissedController(
-        dismissed: UIViewController!) -> UIViewControllerAnimatedTransitioning! {
-            return self.modalAnimator
     }
 }
 
