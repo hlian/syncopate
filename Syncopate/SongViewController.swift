@@ -95,6 +95,14 @@ class SongViewController: UIViewController {
         self.view.addGestureRecognizer(tapGesture)
     }
 
+    override func viewWillAppear(animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
+    override func viewWillDisappear(animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
+    }
+
     func didTap() {
         if (self.player.rate == 0.0) {
             self.player.play()

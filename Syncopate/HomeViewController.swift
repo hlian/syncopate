@@ -4,10 +4,15 @@ import UIKit
 class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransitioning, UIViewControllerTransitioningDelegate {
     let duration : NSTimeInterval = 0.5
     let damping : CGFloat = 0.7
+    let songView : UIView
 
     var maximizing = true
     var originalFrame : CGRect?
     var originalSuperview : UIView?
+
+    init(songView: UIView) {
+        self.songView = songView
+    }
 
     func transitionDuration(transitionContext: UIViewControllerContextTransitioning) -> NSTimeInterval {
         return self.duration
@@ -18,14 +23,11 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
         let homeVC = self.homeViewControllerOf(ctx)
 
         if (self.maximizing) {
-            // The song view controller is weird! Its view is already in the hierarchy; it as a VC
-            // is already a child of the home VC.
-            self.originalFrame = songVC.view.frame
-            self.originalSuperview = songVC.view.superview
-
             ctx.containerView().insertSubview(songVC.view, aboveSubview: homeVC.view)
+            let frame = songVC.view.frame
+            songVC.view.frame = self.originalFrame!
             self.springlyAnimate({ () -> Void in
-                songVC.view.frame = homeVC.view.frame
+                songVC.view.frame = frame
             }, completionBlock: { (finished) -> Void in
                 assert(!ctx.transitionWasCancelled())
                 if (!finished) {
@@ -64,16 +66,28 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
     }
 
     func animationControllerForPresentedController(
-            presented: UIViewController,
-            presentingController presenting: UIViewController,
-            sourceController source: UIViewController)-> UIViewControllerAnimatedTransitioning? {
-        self.maximizing = true
-        return self
+        presented: UIViewController,
+        presentingController presenting: UIViewController,
+        sourceController source: UIViewController)-> UIViewControllerAnimatedTransitioning? {
+            // The song view controller is weird! Its view is already in the hierarchy; it as a VC
+            // is already a child of the home VC.
+            self.willPresent()
+            return self
     }
 
     func animationControllerForDismissedController(dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        self.maximizing = false
+        self.willDismiss()
         return self
+    }
+
+    func willPresent() {
+        self.maximizing = true
+        self.originalFrame = self.songView.frame
+        self.originalSuperview = self.songView.superview
+    }
+
+    func willDismiss() {
+        self.maximizing = false
     }
 
     private func songViewControllerOf(ctx: UIViewControllerContextTransitioning) -> UIViewController {
@@ -89,7 +103,7 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
     }
 }
 
-class HomeViewController: UIViewController {
+class HomeViewController: UIViewController, UINavigationControllerDelegate {
     let songHeight = 100
     let fauns = NSMutableOrderedSet()
 
@@ -106,7 +120,7 @@ class HomeViewController: UIViewController {
 
         songFaun.modalPresentationStyle = UIModalPresentationStyle.Custom
 
-        let ac = HomeToSongAnimationController()
+        let ac = HomeToSongAnimationController(songView: songFaun.view)
         songFaun.transitioningDelegate = ac
         objc_setAssociatedObject(songFaun, &animationControllerKey, ac, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
     }
@@ -120,6 +134,7 @@ class HomeViewController: UIViewController {
 
         self.title = "Syncopate"
         self.view = scrollView
+        self.navigationController!.delegate = self
 
         self.prepareModal()
     }
@@ -128,6 +143,18 @@ class HomeViewController: UIViewController {
         if (!self.preparedSongs) {
             self.prepareSongs()
             self.preparedSongs = true
+        }
+    }
+
+    func navigationController(navigationController: UINavigationController, animationControllerForOperation operation: UINavigationControllerOperation, fromViewController fromVC: UIViewController, toViewController toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        if (operation == UINavigationControllerOperation.Push) {
+            let ac = toVC.transitioningDelegate as HomeToSongAnimationController
+            ac.willPresent()
+            return ac
+        } else {
+            let ac = fromVC.transitioningDelegate as HomeToSongAnimationController
+            ac.willDismiss()
+            return ac
         }
     }
 
@@ -158,9 +185,9 @@ class HomeViewController: UIViewController {
     func prepareModal() {
         self.rac_valuesForKeyPath("modalFaun", observer: self).subscribeNext { [weak self] x in
             if let faun = x as? SongViewController {
-                self!.presentViewController(faun, animated: true, completion: nil)
+                self!.navigationController!.pushViewController(faun, animated: true)
             } else {
-                self!.dismissViewControllerAnimated(true, completion: nil)
+                self!.navigationController!.popToViewController(self!, animated: true)
             }
         }
     }
