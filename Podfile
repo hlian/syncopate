@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
-platform :ios, '7.1'
+source 'https://github.com/CocoaPods/Specs.git'
+
+platform :ios, '8.1'
 inhibit_all_warnings!
 
 xcodeproj 'Syncopate'
