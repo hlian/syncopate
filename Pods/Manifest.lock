@@ -1,4 +1,5 @@
 PODS:
+  - PureLayout (3.0.1)
   - ReactiveCocoa (2.3.1):
     - ReactiveCocoa/UI (= 2.3.1)
   - ReactiveCocoa/Core (2.3.1):
@@ -8,9 +9,11 @@ PODS:
     - ReactiveCocoa/Core
 
 DEPENDENCIES:
+  - PureLayout
   - ReactiveCocoa
 
 SPEC CHECKSUMS:
+  PureLayout: f35f5384c9c4e4479df041dbe33ad7577b71ddfb
   ReactiveCocoa: 334468a83b2c5f669f7cfb9a084415ee23219b4f
 
 COCOAPODS: 0.39.0

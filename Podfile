@@ -7,3 +7,4 @@ inhibit_all_warnings!
 
 xcodeproj 'Syncopate'
 pod 'ReactiveCocoa'
+pod 'PureLayout'

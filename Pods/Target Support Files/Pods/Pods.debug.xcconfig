@@ -1,5 +1,5 @@
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
-HEADER_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/ReactiveCocoa"
-OTHER_CFLAGS = $(inherited) -isystem "${PODS_ROOT}/Headers/Public" -isystem "${PODS_ROOT}/Headers/Public/ReactiveCocoa"
-OTHER_LDFLAGS = $(inherited) -ObjC -l"Pods-ReactiveCocoa"
+HEADER_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/PureLayout" "${PODS_ROOT}/Headers/Public/ReactiveCocoa"
+OTHER_CFLAGS = $(inherited) -isystem "${PODS_ROOT}/Headers/Public" -isystem "${PODS_ROOT}/Headers/Public/PureLayout" -isystem "${PODS_ROOT}/Headers/Public/ReactiveCocoa"
+OTHER_LDFLAGS = $(inherited) -ObjC -l"Pods-PureLayout" -l"Pods-ReactiveCocoa"
 PODS_ROOT = ${SRCROOT}/Pods
