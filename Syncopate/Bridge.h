@@ -9,7 +9,8 @@
 #ifndef Syncopate_Bridge_h
 #define Syncopate_Bridge_h
 
-#import <ReactiveCocoa/ReactiveCocoa.h>
+#import "ReactiveCocoa/ReactiveCocoa.h"
+#import "PureLayout/PureLayout.h"
 @import AVFoundation;
 
 #endif

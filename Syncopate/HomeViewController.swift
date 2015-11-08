@@ -2,8 +2,8 @@ import ObjectiveC
 import UIKit
 
 class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransitioning, UIViewControllerTransitioningDelegate {
-    let duration : NSTimeInterval = 3
-    let damping : CGFloat = 0.7
+    let duration : NSTimeInterval = 0.5
+    let damping : CGFloat = 0.5
     let songView : UIView
 
     var maximizing = true
@@ -19,16 +19,16 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
     }
 
     func animateTransition(ctx: UIViewControllerContextTransitioning) {
-        let songVC = self.songViewControllerOf(ctx)
+        let songVC = self.songViewControllerOf(ctx) as! SongViewController
         let homeVC = self.homeViewControllerOf(ctx)
         let containerView = ctx.containerView()!
 
         if (self.maximizing) {
             containerView.insertSubview(songVC.view, aboveSubview: homeVC.view)
-            let frame = songVC.view.frame
-            songVC.view.frame = self.originalFrame!
-            self.springlyAnimate({ () -> Void in
-                songVC.view.frame = frame
+            songVC.view.frame = ctx.containerView()!.convertRect(self.originalFrame!, fromView: self.originalSuperview!)
+            self.springlyAnimate({
+                songVC.view.frame = containerView.bounds
+                songVC.topInset = homeVC.topLayoutGuide.length
             }, completionBlock: { (finished) -> Void in
                 assert(!ctx.transitionWasCancelled())
                 if (!finished) {
@@ -38,9 +38,11 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
                 ctx.completeTransition(true)
             })
         } else {
+            let originalSuperview = self.originalSuperview!
             containerView.insertSubview(homeVC.view, belowSubview: songVC.view)
-            self.springlyAnimate({ () -> Void in
-                songVC.view.frame = ctx.containerView()!.convertRect(self.originalFrame!, fromView: self.originalSuperview!)
+            self.springlyAnimate({
+                songVC.view.frame = ctx.containerView()!.convertRect(self.originalFrame!, fromView: originalSuperview)
+                songVC.topInset = 0
             }, completionBlock: { (finished) -> Void in
                 assert(!ctx.transitionWasCancelled())
                 if (!finished) {
@@ -50,7 +52,7 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
 
                 ctx.completeTransition(true)
                 songVC.view.frame = self.originalFrame!
-                self.originalSuperview!.addSubview(songVC.view)
+                originalSuperview.addSubview(songVC.view)
             })
         }
     }
@@ -84,7 +86,7 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
     func willPresent() {
         self.maximizing = true
         self.originalFrame = self.songView.frame
-        self.originalSuperview = self.songView.superview
+        self.originalSuperview = self.songView.superview!
     }
 
     func willDismiss() {
@@ -141,7 +143,7 @@ class HomeViewController: UIViewController, UINavigationControllerDelegate {
     }
 
     override func viewWillAppear(animated: Bool) {
-        if (!self.preparedSongs) {
+        if !self.preparedSongs {
             self.prepareSongs()
             self.preparedSongs = true
         }
@@ -160,25 +162,27 @@ class HomeViewController: UIViewController, UINavigationControllerDelegate {
     }
 
     func prepareSongs() {
-        let onTap = { (controller : SongViewController) -> Void in
-            if (self.modalFaun == nil) {
+        let onTap = {
+            (controller: SongViewController, presenting: Bool) -> Void in
+            if (self.modalFaun == nil && presenting) {
                 self.modalFaun = controller
-            } else if (self.modalFaun! == controller) {
+            } else if (self.modalFaun! == controller && !presenting) {
                 self.modalFaun = nil
             }
         }
 
-        self.addFaun(SongViewController(
-            frame: CGRectMake(10, CGFloat(10), self.view.bounds.size.width - 20, CGFloat(self.songHeight)),
+        let song1 = SongViewController(
             song: Song(url: NSURL(string: "https://a.tumblr.com/tumblr_mndqjdrkkq1s1b8mno1_r1.mp3")!),
             onTap: onTap
-        ))
-
-        self.addFaun(SongViewController(
-            frame: CGRectMake(10, CGFloat(self.songHeight + 20), self.view.bounds.size.width - 20, CGFloat(self.songHeight)),
+        )
+        let song2 = SongViewController(
             song: Song(url: NSURL(string: "https://a.tumblr.com/tumblr_naqik7VOSl1te74f8o1.mp3")!),
             onTap: onTap
-        ))
+        )
+        song1.view.frame = CGRectMake(10, CGFloat(10), self.view.bounds.size.width - 20, CGFloat(self.songHeight))
+        song2.view.frame = CGRectMake(10, CGFloat(self.songHeight + 20), self.view.bounds.size.width - 20, CGFloat(self.songHeight))
+        addFaun(song1)
+        addFaun(song2)
     }
 
     // MARK: transitioning

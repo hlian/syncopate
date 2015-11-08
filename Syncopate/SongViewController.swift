@@ -16,7 +16,7 @@ class SongView : UIView {
         preconditionFailure("no")
     }
 
-    required init(frame: CGRect, song: Song, playingSignal: RACSignal, metadataSignal: RACSignal) {
+    required init(frame: CGRect, song: Song, metadataSignal: RACSignal) {
         self.song = song
         self.titleLabel = UILabel(frame: CGRectMake(20, 20, frame.width - 20, 40))
         super.init(frame: frame)
@@ -32,39 +32,37 @@ class SongView : UIView {
             }
         }
 
-        playingSignal.subscribeNext({ [weak self] x in
-            let playing = (x as! NSNumber).boolValue
-            self!.backgroundColor = playing ? UIColor(red: 1.0, green: 0.9, blue: 0.9, alpha: 0.992) : UIColor.whiteColor();
-        });
-
-
         self.addSubview(self.titleLabel)
     }
 }
 
 class SongViewController: UIViewController {
+    var songView: SongView!
+    var topInset: CGFloat {
+        didSet {
+            songView.frame = CGRectMake(0, topInset, view.bounds.size.width, view.bounds.size.height - topInset)
+        }
+    }
+
     let song : Song
     let player : AVPlayer
-    let frame : CGRect
-    let onTap : SongViewController -> Void
+    let onTap : (SongViewController, Bool) -> Void
 
     dynamic var playing : Bool
     dynamic var metadata : [String: String]?
-
-    var songFrame : CGRect = CGRectMake(0, 0, 0, 0)
 
     required init?(coder aDecoder: NSCoder) {
         preconditionFailure("no")
     }
 
-    required init(frame: CGRect, song: Song, onTap: SongViewController -> Void) {
+    required init(song: Song, onTap: (SongViewController, Bool) -> Void) {
         self.song = song
         self.player = AVPlayer(URL: self.song.url)
-        self.frame = frame
         self.onTap = onTap
 
         self.playing = false
         self.metadata = nil
+        self.topInset = 0
 
         super.init(nibName: nil, bundle: nil)
 
@@ -80,12 +78,22 @@ class SongViewController: UIViewController {
     }
 
     override func loadView() {
-        self.view = SongView(
-            frame: self.frame,
+        view = UIView(frame: CGRectMake(0, 0, 300, 300))
+        songView = SongView(
+            frame: view.bounds,
             song: self.song,
-            playingSignal: self.rac_valuesForKeyPath("playing", observer: self),
             metadataSignal: self.rac_valuesForKeyPath("metadata", observer: self)
         )
+
+        view.addSubview(songView)
+        songView.autoresizingMask = [.FlexibleHeight, .FlexibleWidth]
+
+
+        self.rac_valuesForKeyPath("playing", observer: self).subscribeNext {
+            [unowned self] x in
+            let playing = (x as! NSNumber).boolValue
+            self.view.backgroundColor = playing ? UIColor(red: 1.0, green: 0.9, blue: 0.9, alpha: 0.992) : UIColor.whiteColor()
+        }
     }
 
     override func viewDidLoad() {
@@ -95,22 +103,17 @@ class SongViewController: UIViewController {
         self.view.addGestureRecognizer(tapGesture)
     }
 
-    override func viewWillAppear(animated: Bool) {
-        self.navigationController?.setNavigationBarHidden(true, animated: false)
-    }
-
-    override func viewWillDisappear(animated: Bool) {
-        self.navigationController?.setNavigationBarHidden(false, animated: false)
+    override func didMoveToParentViewController(parent: UIViewController?) {
+        if parent == nil {
+            player.pause()
+            playing = false
+            onTap(self, false)
+        }
     }
 
     func didTap() {
-        if (self.player.rate == 0.0) {
-            self.player.play()
-            self.playing = true
-        } else {
-            self.player.pause()
-            self.playing = false
-        }
-        self.onTap(self)
+        player.play()
+        playing = true
+        onTap(self, true)
     }
 }
