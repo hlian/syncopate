@@ -11,6 +11,7 @@
 		3F25464D19AAF0F000F684D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F25464C19AAF0F000F684D9 /* AppDelegate.swift */; };
 		3F25464F19AAF0F000F684D9 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F25464E19AAF0F000F684D9 /* HomeViewController.swift */; };
 		3F25465419AAF0F000F684D9 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3F25465319AAF0F000F684D9 /* Images.xcassets */; };
+		3F450EFA1BEFDE85003633BB /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3F450EF91BEFDE85003633BB /* Launch Screen.storyboard */; };
 		3F50C40619AB0FA80025ED8B /* Song.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F50C40519AB0FA80025ED8B /* Song.swift */; };
 		3F50C40919AB0FB50025ED8B /* SongViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F50C40819AB0FB50025ED8B /* SongViewController.swift */; };
 /* End PBXBuildFile section */
@@ -21,6 +22,7 @@
 		3F25464C19AAF0F000F684D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Syncopate/AppDelegate.swift; sourceTree = "<group>"; };
 		3F25464E19AAF0F000F684D9 /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HomeViewController.swift; path = Syncopate/HomeViewController.swift; sourceTree = "<group>"; };
 		3F25465319AAF0F000F684D9 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Syncopate/Images.xcassets; sourceTree = "<group>"; };
+		3F450EF91BEFDE85003633BB /* Launch Screen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = "Launch Screen.storyboard"; path = "Syncopate/Launch Screen.storyboard"; sourceTree = "<group>"; };
 		3F50C40519AB0FA80025ED8B /* Song.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Song.swift; path = Syncopate/Song.swift; sourceTree = "<group>"; };
 		3F50C40819AB0FB50025ED8B /* SongViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SongViewController.swift; path = Syncopate/SongViewController.swift; sourceTree = "<group>"; };
 		3F50C40A19AB0FE60025ED8B /* Bridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Bridge.h; path = Syncopate/Bridge.h; sourceTree = "<group>"; };
@@ -56,6 +58,7 @@
 		3F25464119AAF05E00F684D9 /* etc */ = {
 			isa = PBXGroup;
 			children = (
+				3F450EF91BEFDE85003633BB /* Launch Screen.storyboard */,
 				3F50C40A19AB0FE60025ED8B /* Bridge.h */,
 				3F25464C19AAF0F000F684D9 /* AppDelegate.swift */,
 				3F25465319AAF0F000F684D9 /* Images.xcassets */,
@@ -167,6 +170,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F450EFA1BEFDE85003633BB /* Launch Screen.storyboard in Resources */,
 				3F25465419AAF0F000F684D9 /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -258,7 +262,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -309,7 +312,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;

@@ -15,10 +15,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject : AnyObject]?) -> Bool {
         let navController = UINavigationController()
         navController.pushViewController(HomeViewController(), animated: false)
-        self.window = UIWindow(frame: UIScreen.mainScreen().bounds)
-        self.window?.rootViewController = navController
-        self.window?.backgroundColor = UIColor.whiteColor()
-        self.window?.makeKeyAndVisible()
+        window = UIWindow(frame: UIScreen.mainScreen().bounds)
+        window?.rootViewController = navController
+        window?.backgroundColor = UIColor.whiteColor()
+        window?.makeKeyAndVisible()
         return true
     }
 }

@@ -21,8 +21,8 @@ class SongView : UIView {
         self.titleLabel = UILabel(frame: CGRectMake(20, 20, frame.width - 20, 40))
         super.init(frame: frame)
 
-        self.titleLabel.text = "Loading..."
-        self.titleLabel.font = UIFont(name: "Avenir Next", size: 18)
+        titleLabel.text = "Loading..."
+        titleLabel.font = UIFont(name: "Avenir Next", size: 18)
         metadataSignal.subscribeNext { [weak self] x in
             let metadata = (x as! [String: String]?)
             if let title = metadata?["title"] {
@@ -32,7 +32,7 @@ class SongView : UIView {
             }
         }
 
-        self.addSubview(self.titleLabel)
+        addSubview(titleLabel)
     }
 }
 
@@ -57,16 +57,16 @@ class SongViewController: UIViewController {
 
     required init(song: Song, onTap: (SongViewController, Bool) -> Void) {
         self.song = song
-        self.player = AVPlayer(URL: self.song.url)
         self.onTap = onTap
 
-        self.playing = false
-        self.metadata = nil
-        self.topInset = 0
+        player = AVPlayer(URL: song.url)
+        playing = false
+        metadata = nil
+        topInset = 0
 
         super.init(nibName: nil, bundle: nil)
 
-        self.rac_valuesForKeyPath("player.currentItem.asset.commonMetadata", observer: self).subscribeNext { [weak self] array in
+        rac_valuesForKeyPath("player.currentItem.asset.commonMetadata", observer: self).subscribeNext { [weak self] array in
             var metadata : [String: String] = [:]
             for item in (array as! [AVMetadataItem]) {
                 if let commonKey = item.commonKey where commonKey != "artwork" && commonKey != "identifier" {
@@ -81,15 +81,15 @@ class SongViewController: UIViewController {
         view = UIView(frame: CGRectMake(0, 0, 300, 300))
         songView = SongView(
             frame: view.bounds,
-            song: self.song,
-            metadataSignal: self.rac_valuesForKeyPath("metadata", observer: self)
+            song: song,
+            metadataSignal: rac_valuesForKeyPath("metadata", observer: self)
         )
 
         view.addSubview(songView)
         songView.autoresizingMask = [.FlexibleHeight, .FlexibleWidth]
 
 
-        self.rac_valuesForKeyPath("playing", observer: self).subscribeNext {
+        rac_valuesForKeyPath("playing", observer: self).subscribeNext {
             [unowned self] x in
             let playing = (x as! NSNumber).boolValue
             self.view.backgroundColor = playing ? UIColor(red: 1.0, green: 0.9, blue: 0.9, alpha: 0.992) : UIColor.whiteColor()
@@ -100,7 +100,7 @@ class SongViewController: UIViewController {
         super.viewDidLoad()
 
         let tapGesture = UITapGestureRecognizer(target: self, action: "didTap")
-        self.view.addGestureRecognizer(tapGesture)
+        view.addGestureRecognizer(tapGesture)
     }
 
     override func didMoveToParentViewController(parent: UIViewController?) {
