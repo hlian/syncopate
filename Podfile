@@ -2,7 +2,7 @@
 
 source 'https://github.com/CocoaPods/Specs.git'
 
-platform :ios, '8.1'
+platform :ios, '9.1'
 inhibit_all_warnings!
 
 xcodeproj 'Syncopate'
