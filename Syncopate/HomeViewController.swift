@@ -2,7 +2,7 @@ import ObjectiveC
 import UIKit
 
 class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransitioning, UIViewControllerTransitioningDelegate {
-    let duration : NSTimeInterval = 0.5
+    let duration : NSTimeInterval = 3
     let damping : CGFloat = 0.7
     let songView : UIView
 
@@ -14,16 +14,17 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
         self.songView = songView
     }
 
-    func transitionDuration(transitionContext: UIViewControllerContextTransitioning) -> NSTimeInterval {
+    func transitionDuration(transitionContext: UIViewControllerContextTransitioning?) -> NSTimeInterval {
         return self.duration
     }
 
     func animateTransition(ctx: UIViewControllerContextTransitioning) {
         let songVC = self.songViewControllerOf(ctx)
         let homeVC = self.homeViewControllerOf(ctx)
+        let containerView = ctx.containerView()!
 
         if (self.maximizing) {
-            ctx.containerView().insertSubview(songVC.view, aboveSubview: homeVC.view)
+            containerView.insertSubview(songVC.view, aboveSubview: homeVC.view)
             let frame = songVC.view.frame
             songVC.view.frame = self.originalFrame!
             self.springlyAnimate({ () -> Void in
@@ -37,9 +38,9 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
                 ctx.completeTransition(true)
             })
         } else {
-            ctx.containerView().insertSubview(homeVC.view, belowSubview: songVC.view)
+            containerView.insertSubview(homeVC.view, belowSubview: songVC.view)
             self.springlyAnimate({ () -> Void in
-                songVC.view.frame = ctx.containerView().convertRect(self.originalFrame!, fromView: self.originalSuperview!)
+                songVC.view.frame = ctx.containerView()!.convertRect(self.originalFrame!, fromView: self.originalSuperview!)
             }, completionBlock: { (finished) -> Void in
                 assert(!ctx.transitionWasCancelled())
                 if (!finished) {
@@ -60,7 +61,7 @@ class HomeToSongAnimationController : NSObject, UIViewControllerAnimatedTransiti
             delay: 0,
             usingSpringWithDamping: self.damping,
             initialSpringVelocity: 0,
-            options: UIViewAnimationOptions.CurveLinear | UIViewAnimationOptions.BeginFromCurrentState,
+            options: [UIViewAnimationOptions.CurveLinear, UIViewAnimationOptions.BeginFromCurrentState],
             animations: animationBlock,
             completion: completionBlock)
     }
@@ -122,7 +123,7 @@ class HomeViewController: UIViewController, UINavigationControllerDelegate {
 
         let ac = HomeToSongAnimationController(songView: songFaun.view)
         songFaun.transitioningDelegate = ac
-        objc_setAssociatedObject(songFaun, &animationControllerKey, ac, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
+        objc_setAssociatedObject(songFaun, &animationControllerKey, ac, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
 
     override func loadView() {
@@ -148,11 +149,11 @@ class HomeViewController: UIViewController, UINavigationControllerDelegate {
 
     func navigationController(navigationController: UINavigationController, animationControllerForOperation operation: UINavigationControllerOperation, fromViewController fromVC: UIViewController, toViewController toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         if (operation == UINavigationControllerOperation.Push) {
-            let ac = toVC.transitioningDelegate as HomeToSongAnimationController
+            let ac = toVC.transitioningDelegate as! HomeToSongAnimationController
             ac.willPresent()
             return ac
         } else {
-            let ac = fromVC.transitioningDelegate as HomeToSongAnimationController
+            let ac = fromVC.transitioningDelegate as! HomeToSongAnimationController
             ac.willDismiss()
             return ac
         }

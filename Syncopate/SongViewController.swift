@@ -12,8 +12,8 @@ class SongView : UIView {
     let song : Song
     let titleLabel : UILabel
 
-    required init(coder: NSCoder) {
-        assertionFailure("no")
+    required init?(coder: NSCoder) {
+        preconditionFailure("no")
     }
 
     required init(frame: CGRect, song: Song, playingSignal: RACSignal, metadataSignal: RACSignal) {
@@ -24,7 +24,7 @@ class SongView : UIView {
         self.titleLabel.text = "Loading..."
         self.titleLabel.font = UIFont(name: "Avenir Next", size: 18)
         metadataSignal.subscribeNext { [weak self] x in
-            let metadata = (x as [String: String]?)
+            let metadata = (x as! [String: String]?)
             if let title = metadata?["title"] {
                 self!.titleLabel.text = title
             } else {
@@ -33,7 +33,7 @@ class SongView : UIView {
         }
 
         playingSignal.subscribeNext({ [weak self] x in
-            let playing = (x as NSNumber).boolValue
+            let playing = (x as! NSNumber).boolValue
             self!.backgroundColor = playing ? UIColor(red: 1.0, green: 0.9, blue: 0.9, alpha: 0.992) : UIColor.whiteColor();
         });
 
@@ -53,13 +53,13 @@ class SongViewController: UIViewController {
 
     var songFrame : CGRect = CGRectMake(0, 0, 0, 0)
 
-    required init(coder aDecoder: NSCoder) {
-        assertionFailure("no")
+    required init?(coder aDecoder: NSCoder) {
+        preconditionFailure("no")
     }
 
     required init(frame: CGRect, song: Song, onTap: SongViewController -> Void) {
         self.song = song
-        self.player = AVPlayer.playerWithURL(self.song.url) as AVPlayer
+        self.player = AVPlayer(URL: self.song.url)
         self.frame = frame
         self.onTap = onTap
 
@@ -70,9 +70,9 @@ class SongViewController: UIViewController {
 
         self.rac_valuesForKeyPath("player.currentItem.asset.commonMetadata", observer: self).subscribeNext { [weak self] array in
             var metadata : [String: String] = [:]
-            for item in (array as [AVMetadataItem]) {
-                if (item.commonKey != "artwork" && item.commonKey != "identifier") {
-                    metadata[item.commonKey] = item.stringValue
+            for item in (array as! [AVMetadataItem]) {
+                if let commonKey = item.commonKey where commonKey != "artwork" && commonKey != "identifier" {
+                    metadata[commonKey] = item.stringValue
                 }
             }
             self!.metadata = metadata
